@@ -1,0 +1,38 @@
+body {
+    font-family: sans-serif;
+    padding: 20px;
+    text-align: center;
+}
+
+.checkRadio {
+    width: 100%;
+    height: 100px;
+    margin-bottom: 20px;
+}
+
+.checkRadio label {
+    margin: 0 10px;
+}
+
+.splide__slide img {
+    width: 100%;
+    height: 400px;
+    object-fit: cover;
+}
+
+@media (max-width: 768px) {
+    .splide__slide img {
+    height: 300px;
+    }
+}
+
+@media (max-width: 480px) {
+    .splide__slide img {
+    height: 200px;
+    }
+}
+
+#toggledRadios {
+    display: none;
+    margin-top: 10px;
+}
