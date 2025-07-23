@@ -1,167 +1,159 @@
-$(function() {
-const $radios = $('input[name="mode"]')
-const $secondRadios = $('input[name="secondMode"]')
+$(document).ready(function () {
+    const $modeRadios = $('input[name="mode"]');
+    const $secondModeRadios = $('input[name="secondMode"]');
+    const $toggledRadiosDiv = $('#toggledRadios');
 
-const $checkedRadio = $('input[name="mode"]:checked')
-    if ($checkedRadio.length) {
-        updateMode($checkedRadio.val())
+    const $slides = $('.wrapSlide');
+    const $prev = $('#prev');
+    const $next = $('#next');
+    const $dotsContainer = $('#dotsContainer');
+
+    let currentIndex = 0;
+    let interval = null;
+    let currentMode = 'switch1Img';
+    let groupSize = 1;
+
+    function getResponsiveGroupSize() {
+        const width = $(window).width();
+        if (width < 721) return 1;
+        if (width < 1024) return 2;
+        return 3;
     }
 
-    $radios.on('change', function() {
-        const value = $(this).val()
-
-        if (value === "switch3Img") {
-            $('#toggledRadios').show()
-
-            $secondRadios.off('change').on('change', function() {
-                updateMode($(this).val())
-            })
-        } else if (value === "switch1Img") {
-            $('#toggledRadios').hide()
-            updateMode(value)
-        }
-    })
-
-    function updateMode(mode) {
-        const $firstCarousel = $('#firstCarousel')
-        const $secondCarousel = $('#secondCarousel')
-        const $task3Gallery = $('#task3Gallery')
-        const $prev = $('#prev')
-        const $next = $('#next')
-
-        $firstCarousel.hide()
-        $secondCarousel.hide()
-        $task3Gallery.hide()
-
-        const $newPrev = $prev.clone(true)
-        const $newNext = $next.clone(true)
-        $prev.replaceWith($newPrev)
-        $next.replaceWith($newNext)
-
-        function getScrollAmount($scrollContainer, factor = 1) {
-            return $scrollContainer.find('div').outerWidth() * factor
-        }
-
-        if (mode === 'switch1Img') {
-            $firstCarousel.show()
-
-            const $img = $('.carImage')
-            let count = 0
-
-            const $dotsContainer = $('#dotsContainer')
-            $dotsContainer.empty()
-
-            $img.each((index) => {
-                const $dot = $('<div>').addClass('dot')
-                if (index === 0) $dot.addClass('active')
-
-                $dot.on('click', function() {
-                    removeImg(count)
-                    count = index
-                    addImg(count)
-                    updateDots()
-                })
-
-                $dotsContainer.append($dot)
-            })
-
-            function updateDots() {
-                const $allDots = $dotsContainer.find('.dot')
-                $allDots.removeClass('active')
-                $allDots.eq(count).addClass('active')
+    function updateVisibleSlides() {
+        $slides.removeClass('displayable');
+        for (let i = 0; i < groupSize; i++) {
+            const idx = currentIndex + i;
+            if ($slides.eq(idx).length) {
+                $slides.eq(idx).addClass('displayable');
             }
-
-            if (window.task1Interval) clearInterval(window.task1Interval)
-
-            function removeImg(index){
-                $img.eq(index).removeClass('displayable')
-            }
-
-            function addImg(index){
-                $img.eq(index).addClass('displayable')
-            }
-
-            function prevFor1Img() {
-                removeImg(count)
-                count = (count - 1 + $img.length) % $img.length
-                addImg(count)
-                updateDots()
-            }
-
-            function nextFor1Img() {
-                removeImg(count)
-                count = (count + 1) % $img.length
-                addImg(count)
-                updateDots()
-            }
-
-            window.task1Interval = setInterval(nextFor1Img, 5000)
-
-            $newPrev.on('click', prevFor1Img)
-            $newNext.on('click', nextFor1Img)
-
-        } else if (mode === 'switch3_1Img') {
-            $secondCarousel.css('display', 'flex')
-            const $scroll = $('.gallery')
-
-            function animation(smooth){
-                $scroll.css('scrollBehavior', smooth)
-            }
-
-            function getScrollAmount1() {
-                if (window.innerWidth <= 480) return $scroll.outerWidth()
-                if (window.innerWidth <= 768) return $scroll.outerWidth() / 2
-                animation('smooth')
-                return $scroll.outerWidth() / 3
-            }
-
-            function scrollRight(){
-                $scroll.scrollLeft($scroll.scrollLeft() + getScrollAmount1())
-                animation('smooth')
-                if ($scroll.scrollLeft() + $scroll.outerWidth() >= $scroll[0].scrollWidth - 10) {
-                    $scroll.scrollLeft(0)
-                }
-            }
-
-            function scrollLeft(){
-                $scroll.scrollLeft($scroll.scrollLeft() - getScrollAmount1())
-                if ($scroll.scrollLeft() <= 0) {
-                    $scroll.scrollLeft($scroll[0].scrollWidth)
-                }
-            }
-
-            $newNext.on('click', scrollRight)
-            $newPrev.on('click', scrollLeft)
-
-            setInterval(scrollRight, 5000)
-
-        } else if (mode === 'switch3_3Img') {
-            $task3Gallery.css('display', 'flex')
-
-            const $scroll = $task3Gallery
-
-            function animation(smooth){
-                $scroll.css('scrollBehavior', smooth)
-            }
-
-            function scrollRight(){
-                animation('smooth')
-                $scroll.scrollLeft($scroll.scrollLeft() + getScrollAmount($scroll, 2))
-                if ($scroll.scrollLeft() + $scroll.outerWidth() >= $scroll[0].scrollWidth - 10) {
-                    $scroll.scrollLeft(0)
-                }
-            }
-
-            function scrollLeft(){
-                animation('smooth')
-                $scroll.scrollLeft($scroll.scrollLeft() - getScrollAmount($scroll, 2))
-            }
-
-            $newNext.on('click', scrollRight)
-            $newPrev.on('click', scrollLeft)
-
-            if (window.task3Interval) clearInterval(window.task3Interval)
-            window.task3Interval = setInterval(scrollRight, 5000)
         }
     }
-})
+
+    function showSlide(index) {
+        currentIndex = index;
+        updateVisibleSlides();
+        updateDots(index);
+    }
+
+    function createDots() {
+        $dotsContainer.empty();
+        const dotCount = Math.ceil($slides.length / groupSize);
+        for (let i = 0; i < dotCount; i++) {
+            const $dot = $('<div>').addClass('dot');
+            if (i === 0) $dot.addClass('active');
+            $dot.on('click', function () {
+                currentIndex = i * groupSize;
+                updateVisibleSlides();
+                updateDots(currentIndex);
+            });
+            $dotsContainer.append($dot);
+        }
+    }
+
+    function updateDots(index) {
+        const activeIndex = Math.floor(index / groupSize);
+        const $dots = $dotsContainer.find('.dot');
+        $dots.removeClass('active');
+        if ($dots.eq(activeIndex).length) {
+            $dots.eq(activeIndex).addClass('active');
+        }
+    }
+
+    function nextSlide() {
+        currentIndex += groupSize;
+        if (currentIndex >= $slides.length) currentIndex = 0;
+        updateVisibleSlides();
+        updateDots(currentIndex);
+    }
+
+    function prevSlide() {
+        currentIndex -= groupSize;
+        if (currentIndex < 0) currentIndex = Math.max(0, $slides.length - groupSize);
+        updateVisibleSlides();
+        updateDots(currentIndex);
+    }
+
+    function startAutoSlide() {
+        if (interval) clearInterval(interval);
+        interval = setInterval(nextSlide, 5000);
+    }
+
+    function setupSlider() {
+        createDots();
+        updateVisibleSlides();
+        updateDots(currentIndex);
+        startAutoSlide();
+
+        $prev.off('click').on('click', prevSlide);
+        $next.off('click').on('click', nextSlide);
+    }
+
+    $modeRadios.on('change', function () {
+        currentMode = $(this).val();
+        currentIndex = 0;
+
+        if (currentMode === 'switch1Img') {
+            $toggledRadiosDiv.hide();
+            groupSize = 1;
+            setupSlider();
+        } else if (currentMode === 'switch3Img') {
+            $toggledRadiosDiv.show();
+        }
+    });
+
+    $secondModeRadios.on('change', function () {
+        currentIndex = 0;
+        const val = $(this).val();
+
+        if (val === 'switch3_1Img') {
+            groupSize = getResponsiveGroupSize();
+
+            createDots();
+            updateVisibleSlides();
+            updateDots(currentIndex);
+
+            $prev.off('click').on('click', function () {
+                currentIndex = (currentIndex - 1 + ($slides.length - groupSize + 1)) % ($slides.length - groupSize + 1);
+                updateVisibleSlides();
+                updateDots(currentIndex);
+            });
+
+            $next.off('click').on('click', function () {
+                currentIndex = (currentIndex + 1) % ($slides.length - groupSize + 1);
+                updateVisibleSlides();
+                updateDots(currentIndex);
+            });
+        }
+
+        if (val === 'switch3_3Img') {
+            groupSize = getResponsiveGroupSize();
+
+            createDots();
+            updateVisibleSlides();
+            updateDots(currentIndex);
+
+            $prev.off('click').on('click', prevSlide);
+            $next.off('click').on('click', nextSlide);
+        }
+    });
+
+    $(window).on('resize', function () {
+        if (currentMode === 'switch3Img') {
+            const $activeRadio = $('input[name="secondMode"]:checked');
+            if (!$activeRadio.length) return;
+
+            const previousGroupSize = groupSize;
+            groupSize = getResponsiveGroupSize();
+
+            if (previousGroupSize !== groupSize) {
+                currentIndex = 0;
+                createDots();
+                updateVisibleSlides();
+                updateDots(currentIndex);
+            }
+        }
+    });
+
+    setupSlider();
+});

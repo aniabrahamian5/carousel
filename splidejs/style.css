@@ -14,25 +14,40 @@ body {
     margin: 0 10px;
 }
 
-.splide__slide img {
+.splide__slide {
     width: 100%;
-    height: 400px;
+}
+
+.splide__slide img {
+    width: 50%;
+    height: 500px;
+    padding: 0 25%;
     object-fit: cover;
 }
 
-@media (max-width: 768px) {
-    .splide__slide img {
-    height: 300px;
-    }
+.slideImg2 {
+    object-position: 40% 80%;
 }
 
-@media (max-width: 480px) {
-    .splide__slide img {
-    height: 200px;
-    }
+.slideImg1 {
+    object-position: 40% 20%;
 }
 
 #toggledRadios {
     display: none;
     margin-top: 10px;
+}
+
+@media (max-width: 721px) {
+    .splide__slide img {
+        width: 200px;
+        height: 300px;
+    }
+}
+
+@media (max-width: 721px) {
+    .splide__slide img {
+        width: 200px;
+        height: 300px;
+    }
 }

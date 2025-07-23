@@ -27,8 +27,8 @@ function handleModeChange(mode) {
             autoplay: true,
             interval: 5000,
             breakpoints: {
-            768: { perPage: 2 },
-            480: { perPage: 1 },
+                768: { perPage: 2 },
+                480: { perPage: 1 },
             }
         },
         'switch3_3Img': {
@@ -38,8 +38,8 @@ function handleModeChange(mode) {
             autoplay: true,
             interval: 5000,
             breakpoints: {
-            768: { perPage: 2 },
-            480: { perPage: 1 },
+                768: { perPage: 2 },
+                480: { perPage: 1 },
             }
         }
     }
@@ -51,14 +51,18 @@ document.addEventListener('DOMContentLoaded', () => {
     const modeRadios = document.querySelectorAll('input[name="mode"]')
     const secondModeRadios = document.querySelectorAll('input[name="secondMode"]')
     const toggledRadiosDiv = document.getElementById('toggledRadios')
+    const slideImg = document.getElementsByClassName('slideImg')
 
     modeRadios.forEach(radio => {
         radio.addEventListener('change', () => {
             if (radio.value === 'switch3Img') {
-            toggledRadiosDiv.style.display = 'block'
+                toggledRadiosDiv.style.display = 'block'
             } else {
-            toggledRadiosDiv.style.display = 'none'
-            handleModeChange(radio.value)
+                toggledRadiosDiv.style.display = 'none'
+                for (let i of slideImg) {
+                    // i.style. objectFit = 'contain'
+                }
+                handleModeChange(radio.value)
             }
         })
     })
@@ -68,7 +72,7 @@ document.addEventListener('DOMContentLoaded', () => {
             handleModeChange(radio.value)
         })
     })
-    
+
     const defaultRadio = document.querySelector('input[name="mode"]:checked')
     if (defaultRadio) handleModeChange(defaultRadio.value)
 })
