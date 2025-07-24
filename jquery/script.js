@@ -29,13 +29,7 @@ $(document).ready(function () {
             }
         }
     }
-
-    function showSlide(index) {
-        currentIndex = index;
-        updateVisibleSlides();
-        updateDots(index);
-    }
-
+    
     function createDots() {
         $dotsContainer.empty();
         const dotCount = Math.ceil($slides.length / groupSize);
