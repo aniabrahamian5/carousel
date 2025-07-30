@@ -7,6 +7,7 @@ $(document).ready(function () {
     const $prev = $('#prev')
     const $next = $('#next')
     const $dotsContainer = $('#dotsContainer')
+    const $wrapMain = $('#wrapMain')
 
     let currentIndex = 0
     let interval = null
@@ -28,8 +29,7 @@ $(document).ready(function () {
         for (let i = 0; i < groupSize; i++) {
             const idx = currentIndex + i
             if ($slides.eq(idx).length) {
-                const $slide = $slides.eq(idx)
-                $slide.addClass('displayable').fadeIn(600)
+                $slides.eq(idx).addClass('displayable').fadeIn(600)
             }
         }
     }
@@ -81,6 +81,10 @@ $(document).ready(function () {
 
     function setupSlider() {
         groupSize = currentMode === 'switch1Img' ? 1 : getResponsiveGroupSize()
+
+        $wrapMain.removeClass('one-mode three-mode')
+        $wrapMain.addClass(currentMode === 'switch1Img' ? 'one-mode' : 'three-mode')
+
         createDots()
         updateVisibleSlides()
         updateDots(currentIndex)
@@ -111,7 +115,7 @@ $(document).ready(function () {
         }
     }
 
-    function handlePrimaryModeChange() {
+   function handlePrimaryModeChange() {
         currentMode = $(this).val()
         currentIndex = 0
 
@@ -120,6 +124,9 @@ $(document).ready(function () {
             setupSlider()
         } else if (currentMode === 'switch3Img') {
             $toggledRadiosDiv.show()
+
+            $('#mode2').prop('checked', true)
+            $('#mode2').trigger('change')
         }
     }
 
@@ -127,6 +134,13 @@ $(document).ready(function () {
         currentIndex = 0
         const val = $(this).val()
         groupSize = getResponsiveGroupSize()
+
+        $wrapMain.removeClass('one-mode three-mode')
+        if (val === 'switch3_1Img' || val === 'switch3_3Img') {
+            $wrapMain.addClass('three-mode')
+        } else {
+            $wrapMain.addClass('one-mode')
+        }
 
         createDots()
         updateVisibleSlides()

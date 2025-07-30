@@ -2,12 +2,12 @@ let splideInstance;
 
 const configMap = {
     'switch1Img': {
-        type: 'loop',       
+        type: 'loop',
         perPage: 1,
         autoplay: true,
         interval: 5000,
-        speed: 800,         
-        easing: 'ease-in-out' 
+        speed: 800,
+        easing: 'ease-in-out'
     },
     'switch3_1Img': {
         type: 'loop',
@@ -45,6 +45,9 @@ function initializeSplideSlider(options) {
         splideInstance.destroy(true);
     }
 
+    const currentKey = Object.keys(configMap).find(key => configMap[key] === options);
+    document.body.setAttribute('data-mode', currentKey);
+
     splideInstance = new Splide('#splideMain', options);
     splideInstance.mount();
 }
@@ -54,9 +57,24 @@ function toggleSecondModeVisibility(show) {
     toggledRadiosDiv.style.display = show ? 'block' : 'none';
 }
 
+function autoSelectSecondMode() {
+    const firstMode = document.querySelector('input[name="mode"]:checked');
+    if (firstMode && firstMode.value === 'switch3Img') {
+        toggleSecondModeVisibility(true);
+
+        const firstSecondMode = document.querySelector('input[name="secondMode"]');
+        if (firstSecondMode) {
+            firstSecondMode.checked = true;
+            initializeSplideSlider(configMap[firstSecondMode.value]);
+        }
+    } else {
+        toggleSecondModeVisibility(false);
+    }
+}
+
 function updateSplideConfigByMode(mode) {
     if (mode === 'switch3Img') {
-        toggleSecondModeVisibility(true);
+        autoSelectSecondMode();
     } else {
         toggleSecondModeVisibility(false);
         initializeSplideSlider(configMap[mode]);
@@ -79,15 +97,10 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
+    autoSelectSecondMode();
+
     const defaultMode = document.querySelector('input[name="mode"]:checked');
-    if (defaultMode) {
-        updateSplideConfigByMode(defaultMode.value);
-        if (defaultMode.value === 'switch3Img') {
-            const defaultSecondMode = document.querySelector('input[name="secondMode"]:checked');
-            if (defaultSecondMode) {
-                initializeSplideSlider(configMap[defaultSecondMode.value]);
-            }
-        }
+    if (defaultMode && defaultMode.value !== 'switch3Img') {
+        initializeSplideSlider(configMap[defaultMode.value]);
     }
 });
-
