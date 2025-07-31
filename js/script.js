@@ -16,7 +16,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function getResponsiveGroupSize() {
         const width = window.innerWidth
-        if (width < 721) return 1
+        if (width < 600) return 1
         if (width < 1024) return 2
         return 3
     }
@@ -38,7 +38,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function createDots() {
         dotsContainer.innerHTML = ''
-        const dotCount = Math.ceil(slides.length / groupSize)
+
+        let dotCount
+        if (currentMode === 'switch3Img') {
+            const val = document.querySelector('input[name="secondMode"]:checked')?.value
+            if (val === 'switch3_1Img') {
+                dotCount = slides.length - groupSize + 1
+            } else {
+                dotCount = Math.ceil(slides.length / groupSize)
+            }
+        } else {
+            dotCount = slides.length
+        }
 
         for (let i = 0; i < dotCount; i++) {
             const dot = document.createElement('div')
@@ -46,7 +57,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (i === 0) dot.classList.add('active')
 
             dot.addEventListener('click', () => {
-                currentIndex = i * groupSize
+                currentIndex = i
                 updateVisibleSlides()
                 updateDots(currentIndex)
             })
@@ -57,24 +68,62 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function updateDots(index) {
         const dots = dotsContainer.querySelectorAll('.dot')
-        const activeIndex = Math.floor(index / groupSize)
+        let activeIndex
+
+        if (currentMode === 'switch3Img') {
+            const val = document.querySelector('input[name="secondMode"]:checked')?.value
+            if (val === 'switch3_1Img') {
+                activeIndex = index
+            } else {
+                activeIndex = Math.floor(index / groupSize)
+            }
+        } else {
+            activeIndex = index
+        }
+
         dots.forEach(dot => dot.classList.remove('active'))
         if (dots[activeIndex]) dots[activeIndex].classList.add('active')
     }
 
     function nextSlide() {
+    const val = document.querySelector('input[name="secondMode"]:checked')?.value
+
+    if (currentMode === 'switch3Img' && val === 'switch3_3Img') {
         currentIndex += groupSize
         if (currentIndex >= slides.length) currentIndex = 0
-        updateVisibleSlides()
-        updateDots(currentIndex)
+    } else if (currentMode === 'switch3Img' && val === 'switch3_1Img') {
+        currentIndex += 1
+        if (currentIndex > slides.length - groupSize) currentIndex = 0
+    } else {
+        currentIndex += 1
+        if (currentIndex >= slides.length) currentIndex = 0
     }
 
-    function prevSlide() {
+    updateVisibleSlides()
+    updateDots(currentIndex)
+}
+
+function prevSlide() {
+    const val = document.querySelector('input[name="secondMode"]:checked')?.value
+
+    if (currentMode === 'switch3Img' && val === 'switch3_3Img') {
         currentIndex -= groupSize
-        if (currentIndex < 0) currentIndex = Math.max(0, slides.length - groupSize)
-        updateVisibleSlides()
-        updateDots(currentIndex)
+        if (currentIndex < 0) {
+            currentIndex = slides.length - (slides.length % groupSize === 0 ? groupSize : slides.length % groupSize)
+            if (currentIndex === slides.length) currentIndex = 0
+        }
+    } else if (currentMode === 'switch3Img' && val === 'switch3_1Img') {
+        currentIndex -= 1
+        if (currentIndex < 0) currentIndex = slides.length - groupSize
+    } else {
+        currentIndex -= 1
+        if (currentIndex < 0) currentIndex = slides.length - 1
     }
+
+    updateVisibleSlides()
+    updateDots(currentIndex)
+}
+
 
     function startAutoSlide() {
         if (interval) clearInterval(interval)
@@ -87,7 +136,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function setupSlider() {
-        groupSize = currentMode === 'switch1Img' ? 1 : getResponsiveGroupSize()
+        groupSize = currentMode === 'switch1Img' ? 1 : getResponsiveGroupSize
 
         wrapMain.classList.remove('one-mode', 'three-mode')
         wrapMain.classList.add(currentMode === 'switch1Img' ? 'one-mode' : 'three-mode')
@@ -136,23 +185,29 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function handleSecondaryModeChange(e) {
-        currentIndex = 0
+    currentIndex = 0
+    const val = e.target.value
+
+    if (val === 'switch3_1Img') {
+        groupSize = getResponsiveGroupSize() 
+    } else {
         groupSize = getResponsiveGroupSize()
-        const val = e.target.value
-
-        wrapMain.classList.remove('one-mode', 'three-mode')
-        wrapMain.classList.add((val === 'switch3_1Img' || val === 'switch3_3Img') ? 'three-mode' : 'one-mode')
-
-        createDots()
-        updateVisibleSlides()
-        updateDots(currentIndex)
-
-        if (val === 'switch3_1Img') {
-            bindCustomNav(singleSlideNav)
-        } else if (val === 'switch3_3Img') {
-            bindCustomNav(defaultNav)
-        }
     }
+
+    wrapMain.classList.remove('one-mode', 'three-mode')
+    wrapMain.classList.add((val === 'switch3_1Img' || val === 'switch3_3Img') ? 'three-mode' : 'one-mode')
+
+    createDots()
+    updateVisibleSlides()
+    updateDots(currentIndex)
+
+    if (val === 'switch3_1Img') {
+        bindCustomNav(defaultNav) 
+    } else if (val === 'switch3_3Img') {
+        bindCustomNav(defaultNav)
+    }
+}
+
 
     function handleWindowResize() {
         if (currentMode !== 'switch3Img') return

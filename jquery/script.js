@@ -16,7 +16,7 @@ $(document).ready(function () {
 
     function getResponsiveGroupSize() {
         const width = $(window).width()
-        if (width < 721) return 1
+        if (width < 600) return 1
         if (width < 1024) return 2
         return 3
     }
@@ -36,22 +36,58 @@ $(document).ready(function () {
 
     function createDots() {
         $dotsContainer.empty()
-        const dotCount = Math.ceil($slides.length / groupSize)
+
+        let dotCount
+        if (currentMode === 'switch3Img') {
+            const val = $('input[name="secondMode"]:checked').val()
+            if (val === 'switch3_1Img') {
+                dotCount = $slides.length - groupSize + 1
+            } else {
+                dotCount = Math.ceil($slides.length / groupSize)
+            }
+        } else {
+            dotCount = $slides.length
+        }
+
         for (let i = 0; i < dotCount; i++) {
             const $dot = $('<div>').addClass('dot')
             if (i === 0) $dot.addClass('active')
+
             $dot.on('click', function () {
-                currentIndex = i * groupSize
+                if (currentMode === 'switch3Img') {
+                    const val = $('input[name="secondMode"]:checked').val()
+                    if (val === 'switch3_1Img') {
+                        currentIndex = i
+                    } else {
+                        currentIndex = i * groupSize
+                    }
+                } else {
+                    currentIndex = i
+                }
+
                 updateVisibleSlides()
                 updateDots(currentIndex)
             })
+
             $dotsContainer.append($dot)
         }
     }
 
     function updateDots(index) {
-        const activeIndex = Math.floor(index / groupSize)
         const $dots = $dotsContainer.find('.dot')
+        let activeIndex
+
+        if (currentMode === 'switch3Img') {
+            const val = $('input[name="secondMode"]:checked').val()
+            if (val === 'switch3_1Img') {
+                activeIndex = index
+            } else {
+                activeIndex = Math.floor(index / groupSize)
+            }
+        } else {
+            activeIndex = index
+        }
+
         $dots.removeClass('active')
         if ($dots.eq(activeIndex).length) {
             $dots.eq(activeIndex).addClass('active')
@@ -59,17 +95,40 @@ $(document).ready(function () {
     }
 
     function nextSlide() {
-        currentIndex += groupSize
-        if (currentIndex >= $slides.length) currentIndex = 0
+        const val = $('input[name="secondMode"]:checked').val()
+
+        if (currentMode === 'switch3Img' && val === 'switch3_3Img') {
+            currentIndex += groupSize
+            if (currentIndex >= $slides.length) currentIndex = 0
+        } else if (currentMode === 'switch3Img' && val === 'switch3_1Img') {
+            currentIndex += 1
+            if (currentIndex > $slides.length - groupSize) currentIndex = 0
+        } else {
+            currentIndex += 1
+            if (currentIndex >= $slides.length) currentIndex = 0
+        }
+
         updateVisibleSlides()
         updateDots(currentIndex)
     }
 
     function prevSlide() {
-        currentIndex -= groupSize
-        if (currentIndex < 0) {
-            currentIndex = Math.max(0, $slides.length - groupSize)
+        const val = $('input[name="secondMode"]:checked').val()
+
+        if (currentMode === 'switch3Img' && val === 'switch3_3Img') {
+            currentIndex -= groupSize
+            if (currentIndex < 0) {
+                currentIndex = $slides.length - ($slides.length % groupSize === 0 ? groupSize : $slides.length % groupSize)
+                if (currentIndex === $slides.length) currentIndex = 0
+            }
+        } else if (currentMode === 'switch3Img' && val === 'switch3_1Img') {
+            currentIndex -= 1
+            if (currentIndex < 0) currentIndex = $slides.length - groupSize
+        } else {
+            currentIndex -= 1
+            if (currentIndex < 0) currentIndex = $slides.length - 1
         }
+
         updateVisibleSlides()
         updateDots(currentIndex)
     }
@@ -77,19 +136,6 @@ $(document).ready(function () {
     function startAutoSlide() {
         if (interval) clearInterval(interval)
         interval = setInterval(nextSlide, 5000)
-    }
-
-    function setupSlider() {
-        groupSize = currentMode === 'switch1Img' ? 1 : getResponsiveGroupSize()
-
-        $wrapMain.removeClass('one-mode three-mode')
-        $wrapMain.addClass(currentMode === 'switch1Img' ? 'one-mode' : 'three-mode')
-
-        createDots()
-        updateVisibleSlides()
-        updateDots(currentIndex)
-        bindCustomNav(defaultNav)
-        startAutoSlide()
     }
 
     function bindCustomNav(navFunctions) {
@@ -115,7 +161,7 @@ $(document).ready(function () {
         }
     }
 
-   function handlePrimaryModeChange() {
+    function handlePrimaryModeChange() {
         currentMode = $(this).val()
         currentIndex = 0
 
@@ -136,18 +182,14 @@ $(document).ready(function () {
         groupSize = getResponsiveGroupSize()
 
         $wrapMain.removeClass('one-mode three-mode')
-        if (val === 'switch3_1Img' || val === 'switch3_3Img') {
-            $wrapMain.addClass('three-mode')
-        } else {
-            $wrapMain.addClass('one-mode')
-        }
+        $wrapMain.addClass((val === 'switch3_1Img' || val === 'switch3_3Img') ? 'three-mode' : 'one-mode')
 
         createDots()
         updateVisibleSlides()
         updateDots(currentIndex)
 
         if (val === 'switch3_1Img') {
-            bindCustomNav(singleSlideNav)
+            bindCustomNav(defaultNav)
         } else if (val === 'switch3_3Img') {
             bindCustomNav(defaultNav)
         }
@@ -159,10 +201,10 @@ $(document).ready(function () {
         const $activeRadio = $('input[name="secondMode"]:checked')
         if (!$activeRadio.length) return
 
-        const previousGroupSize = groupSize
+        const prevGroupSize = groupSize
         groupSize = getResponsiveGroupSize()
 
-        if (previousGroupSize !== groupSize) {
+        if (prevGroupSize !== groupSize) {
             currentIndex = 0
             createDots()
             updateVisibleSlides()
@@ -170,15 +212,25 @@ $(document).ready(function () {
         }
     }
 
-    function bindEvents() {
+    function init() {
         $modeRadios.on('change', handlePrimaryModeChange)
         $secondModeRadios.on('change', handleSecondaryModeChange)
         $(window).on('resize', handleWindowResize)
+
+        setupSlider()
     }
 
-    function init() {
-        bindEvents()
-        setupSlider()
+    function setupSlider() {
+        groupSize = currentMode === 'switch1Img' ? 1 : getResponsiveGroupSize()
+
+        $wrapMain.removeClass('one-mode three-mode')
+        $wrapMain.addClass(currentMode === 'switch1Img' ? 'one-mode' : 'three-mode')
+
+        createDots()
+        updateVisibleSlides()
+        updateDots(currentIndex)
+        bindCustomNav(defaultNav)
+        startAutoSlide()
     }
 
     init()
